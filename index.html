@@ -15,45 +15,54 @@
 </div>
 <input type="text" id="jsonInput" placeholder="Enter JSON string" style="width: 300px; padding: 5px;" value='{
     "header": {
-        "txSN": "19394102713697",
-        "txDate": "20231227113942",
-        "txID": "CCD020301",
+        "txSN": "02591079445330",
+        "txDate": "20240625185910",
+        "txID": "CCD020203",
         "channel": "CCDTW",
         "lang": "zh-TW",
-        "sessionID": "AFAA6BAZDFPCRVE20231227MCMMELJ7LDL8788113918AAYZ1636DE674706CBF4",
+        "sessionID": "0J31QF1P80H8A6W20240625BN1JFL7NMANZ17I185816575047680FD22EA311F4",
         "returnCode": "M0000",
         "returnMessage": "成功 ( M0000 ) "
     },
     "body": {
-        "stmtYM": "202312",
-        "cardList": [
+        "unbillTXDetail": [
             {
+                "ccNO": "5408055809690157",
                 "ccFlag": "M",
-                "ccNO": "5408053884120157",
-                "cardName": "XXX",
                 "ccLogo": "829",
                 "ccBrand": "",
-                "ccDesc": "原花旗現金回饋PLUS鈦金卡",
-                "currentTXList": [
+                "unbillTXList": [
                     {
-                        "txDate": "20231122",
-                        "postDate": "20231127",
-                        "txDesc": "優食－辣極麻辣燙  頂溪店",
-                        "txAmt": "231",
+                        "txnId": "9Zdk+DugVXA=",
+                        "txDesc": "UBER FORMOSA CO LTD",
+                        "txDate": "20240625",
+                        "postDate": null,
+                        "txAmt": "361.0",
+                        "isRedeemable": false,
+                        "isInsufficientPt": true,
+                        "isRedeemed": false,
+                        "redeemedAmt": "-0.0",
+                        "spendingAmtAfterRedeem": "361.0",
                         "orglAmt": "0",
-                        "orglCry": null,
-                        "txExchangeDate": null
+                        "orglCry": null
                     },
                     {
-                        "txDate": "20231123",
-                        "postDate": "20231127",
-                        "txDesc": "Nintendo CA1094908077",
-                        "txAmt": "622",
-                        "orglAmt": "153.0",
-                        "orglCry": "HKD",
-                        "txExchangeDate": "20231123"
+                        "txnId": "HznL9IY9/tA=",
+                        "txDesc": "Taiwan High Speed Rail",
+                        "txDate": "20240625",
+                        "postDate": null,
+                        "txAmt": "1330.0",
+                        "isRedeemable": false,
+                        "isInsufficientPt": true,
+                        "isRedeemed": false,
+                        "redeemedAmt": "-0.0",
+                        "spendingAmtAfterRedeem": "1330.0",
+                        "orglAmt": "0",
+                        "orglCry": null
                     }
-                ]
+                ],
+                "ccID": "873B38C33634348A",
+                "ccDesc": "星展eco永續極簡卡"
             }
         ]
     }
@@ -63,7 +72,6 @@
 <button onclick="parseJson()">Parse JSON</button>
 
 <div id="tableContainer"></div>
-
 
 <script>
     // 解析 JSON 方法
@@ -78,6 +86,7 @@
             this.txExchangeDate = txExchangeDate;
         }
     }
+
     function parseJson() {
         // 获取输入框的值
         const jsonString = document.getElementById('jsonInput').value;
@@ -85,27 +94,33 @@
         try {
             // 尝试解析 JSON 字符串
             const bodyResponse = JSON.parse(jsonString);
-            const cardListObject =bodyResponse.body.cardList[0];
-            // 输出解析后的对象到控制台
-            const currentTXList=cardListObject.currentTXList
-            const details = currentTXList.map(item => new Detail(
+            const cardListObject = bodyResponse.body;
+            let allTXList = [];
+
+            // 处理 currentTXList 和 unbillTXList
+            if (cardListObject.cardList && Array.isArray(cardListObject.cardList[0].currentTXList)) {
+                allTXList = cardListObject.cardList[0].currentTXList;
+            }
+
+            if (cardListObject.unbillTXDetail && Array.isArray(cardListObject.unbillTXDetail[0].unbillTXList)) {
+                allTXList = allTXList.concat(cardListObject.unbillTXDetail[0].unbillTXList);
+            }
+
+            // 生成交易详情对象数组
+            const details = allTXList.map(item => new Detail(
                 item.txDate,
                 item.postDate,
                 item.txDesc,
                 item.txAmt,
-                item.orglAmt,
-                item.orglCry,
-                item.txExchangeDate
+                item.orglAmt || "0.00",
+                item.orglCry || null,
+                item.txExchangeDate || null
             ));
+
             details.sort((a, b) => b.txAmt - a.txAmt);
-            for (let i = 0; i < details.length; i++) {
-                const detailObject = details[i];
-                console.log('Detail ' + (i + 1) + ':', detailObject);
-            }
-            
-            // 这里可以继续编写您需要的处理逻辑
-             // 创建表格
-             const table = document.createElement('table');
+
+            // 创建表格
+            const table = document.createElement('table');
             table.border = '1';
 
             // 创建表头
@@ -134,12 +149,10 @@
             // 将表格添加到页面
             tableContainer.appendChild(table);
 
-            // 这里可以继续编写您需要的处理逻辑
         } catch (error) {
             // 捕获解析错误并输出到控制台
             console.error('Error parsing JSON:', error.message);
         }
-        
     }
 </script>
 
