@@ -10,6 +10,7 @@
 <!-- 输入框 -->
 <h1> 星展銀行信用卡帳單解析器</h1>
 <h2>這個是已結帳的帳單API，之後會做未出帳的帳單API</h2>
+<div id="totalAmount"></div>
 <div>
     <p>https://internet-banking.dbs.com.tw/ccds/ccd02/02/ccd020203</p>
 </div>
@@ -73,6 +74,7 @@
 
 <div id="tableContainer"></div>
 
+
 <script>
     // 解析 JSON 方法
     class Detail {
@@ -128,6 +130,7 @@
             const headerRow = thead.insertRow();
             for (const key in details[0]) {
                 const th = document.createElement('th');
+                // 添加文本节点
                 th.appendChild(document.createTextNode(key));
                 headerRow.appendChild(th);
             }
@@ -136,6 +139,17 @@
             const tbody = table.createTBody();
             details.forEach(detail => {
                 const row = tbody.insertRow();
+                // 添加复选框到每一行的第一列
+                const checkboxCell = row.insertCell();
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = true; // 默认勾选
+                checkbox.addEventListener('change', function() {
+                    updateTotalAmount();
+                });
+                checkboxCell.appendChild(checkbox);
+
+                // 添加数据列
                 for (const key in detail) {
                     const cell = row.insertCell();
                     cell.appendChild(document.createTextNode(detail[key]));
@@ -149,10 +163,32 @@
             // 将表格添加到页面
             tableContainer.appendChild(table);
 
+            // 计算并显示总金额
+            updateTotalAmount();
+
         } catch (error) {
             // 捕获解析错误并输出到控制台
             console.error('Error parsing JSON:', error.message);
         }
+    }
+
+    // 更新总金额显示
+    function updateTotalAmount() {
+        const rows = document.querySelectorAll('#tableContainer table tbody tr');
+        let totalAmount = 0;
+
+        rows.forEach(row => {
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                const txAmt = parseFloat(row.cells[4].textContent); // 第二列是金额列
+                if (!isNaN(txAmt)) {
+                    totalAmount += txAmt;
+                }
+            }
+        });
+
+        const totalAmountDiv = document.getElementById('totalAmount');
+        totalAmountDiv.innerHTML = `<p>Total Amount: ${totalAmount.toFixed(2)}</p>`;
     }
 </script>
 
